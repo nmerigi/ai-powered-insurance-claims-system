@@ -20,6 +20,8 @@ import {
 } from '@mui/material';
 import { Notifications as NotificationsIcon, Add as AddIcon, Visibility as VisibilityIcon } from '@mui/icons-material';
 import { FileCopy, HourglassEmpty, CheckCircle, Cancel } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+
 
 function ClaimantDashboard() {
   const claims = []; // fetch this from Firestore later
@@ -83,6 +85,7 @@ useEffect(() => {
   fetchDashboardData();
   }, []);
 
+  const navigate = useNavigate();
 
   return (
     <Box minHeight="100vh" bgcolor="#f9fafb">
@@ -110,7 +113,14 @@ useEffect(() => {
             </Typography>
             <Typography color="text.secondary">Track your claims and submit new ones</Typography>
           </Box>
-          <Button variant="contained" startIcon={<AddIcon />} sx={{ borderRadius: 2 }}>Submit New Claim</Button>
+          <Button 
+            variant="contained" 
+            startIcon={<AddIcon />} 
+            sx={{ borderRadius: 2 }} 
+            onClick={() => navigate('/submit-claim')}
+          >
+            Submit New Claim
+          </Button>
         </Box>
 
         {/* Hero Banner */}
@@ -123,7 +133,15 @@ useEffect(() => {
               <Typography variant="body1" color="text.secondary" mb={2}>
                 Submit new claims effortlessly and track their progress in real-time.
               </Typography>
-              <Button variant="contained" startIcon={<AddIcon />}>Submit New Claim</Button>
+              <Button 
+                variant="contained" 
+                startIcon={<AddIcon />} 
+                sx={{ borderRadius: 2 }} 
+                onClick={() => navigate('/submit-claim')}
+              >
+                Submit New Claim
+              </Button>
+
             </Grid>
             <Grid item md={4} sx={{ display: { xs: 'none', md: 'block' } }}>
               <Box width={120} height={120} borderRadius="50%" bgcolor="#c4b5fd" opacity={0.3}></Box>
