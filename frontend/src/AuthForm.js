@@ -1,3 +1,14 @@
+// Firebase services
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from 'firebase/auth';
+import { useNavigate } from 'react-router-dom';
+import { getDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from './firebase'; 
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
 import React, { useState } from 'react';
 import {
   Box,
@@ -22,9 +33,85 @@ function AuthForm() {
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState('claimant');
 
-  const handleSubmit = (e) => {
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+
+  const navigate = useNavigate();
+
+
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log({ mode, email, password, fullName, role });
+
+    try {
+      if (mode === 'signup') {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        console.log('Signup successful:', user);
+
+        await setDoc(doc(db, 'users', user.uid), {
+          fullName,
+          email,
+          role,
+          createdAt: new Date()
+        });
+
+        showSnackbar('Signup successful!');
+      } else {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+const user = userCredential.user;
+console.log('Login successful:', user);
+
+// Get user's role from Firestore
+const userDocRef = doc(db, 'users', user.uid);
+const userDoc = await getDoc(userDocRef);
+
+if (userDoc.exists()) {
+  const userData = userDoc.data();
+  const userRole = userData.role;
+
+  showSnackbar('Login successful!');
+
+  // Navigate to correct dashboard
+  if (userRole === 'claimant') {
+    navigate('/claimant-dashboard');
+  } else if (userRole === 'insurer') {
+    navigate('/insurer-dashboard');
+  } else {
+    showSnackbar('Unknown role assigned. Please contact support.', 'error');
+  }
+} else {
+  showSnackbar('User role not found. Contact admin.', 'error');
+}
+      }
+
+      setEmail('');
+      setPassword('');
+      setFullName('');
+      setRole('claimant');
+
+    } catch (error) {
+        console.error('Firebase Auth Error:', error.message);
+      if (error.code === 'auth/user-not-found') {
+        showSnackbar('No account found with that email.', 'error');
+      } else if (error.code === 'auth/wrong-password') {
+        showSnackbar('Incorrect password. Please try again.', 'error');
+      } else if (error.code === 'auth/email-already-in-use') {
+        showSnackbar('This email is already in use. Please log in instead.', 'error');
+      } else if (error.code === 'auth/invalid-email') {
+        showSnackbar('Please enter a valid email address.', 'error');
+      } else if (error.code === 'auth/weak-password') {
+        showSnackbar('Password should be at least 6 characters.', 'error');
+      } else {
+        showSnackbar(error.message, 'error');
+      }
+    }
   };
 
   return (
@@ -33,8 +120,8 @@ function AuthForm() {
       <Box
         display={{ xs: 'none', lg: 'flex' }}
         width="50%"
-         sx={{
-          background: 'linear-gradient(to bottom right, #0f172a, #1e293b)', 
+        sx={{
+          background: 'linear-gradient(to bottom right, #0f172a, #1e293b)',
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
@@ -75,7 +162,9 @@ function AuthForm() {
           <Paper elevation={3} sx={{ borderRadius: 4, p: 4 }}>
             <Box textAlign="center" mb={4}>
               <Typography variant="h5" fontWeight={500} color="text.primary" mb={1}>Welcome to ClaimSmart</Typography>
-              <Typography variant="body2" color="text.secondary">{mode === 'login' ? 'Log in to your account.' : 'Create a new account.'}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {mode === 'login' ? 'Log in to your account.' : 'Create a new account.'}
+              </Typography>
             </Box>
 
             <ToggleButtonGroup
@@ -137,14 +226,14 @@ function AuthForm() {
                 type="submit"
                 variant="contained"
                 fullWidth
-                 sx={{
-                      mt: 3,
-                      py: 1.5,
-                      backgroundColor: '#2563eb', 
-                      '&:hover': {
-                        backgroundColor: '#1d4ed8',
-                      },
-                    }}
+                sx={{
+                  mt: 3,
+                  py: 1.5,
+                  backgroundColor: '#2563eb',
+                  '&:hover': {
+                    backgroundColor: '#1d4ed8',
+                  },
+                }}
               >
                 {mode === 'login' ? 'Login' : 'Create Account'}
               </Button>
@@ -164,6 +253,31 @@ function AuthForm() {
           </Paper>
         </Container>
       </Box>
+
+      {/* Snackbar alert */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={4000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <MuiAlert
+          onClose={() => setSnackbarOpen(false)}
+          severity={snackbarSeverity}
+          elevation={6}
+          variant="filled"
+          sx={{
+            width: '100%',
+            backgroundColor: '#2563eb', 
+            borderRadius: '12px',        
+            color: 'white',              
+            fontWeight: 500
+          }}
+        >
+  {snackbarMessage}
+</MuiAlert>
+
+      </Snackbar>
     </Box>
   );
 }
