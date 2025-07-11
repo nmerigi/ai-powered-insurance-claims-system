@@ -13,8 +13,14 @@ import {
   Divider
 } from '@mui/material';
 import { UploadFile, Delete, Person, Notifications } from '@mui/icons-material';
-import { auth, db } from './firebase';
+import { auth, db,storage } from './firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import { Snackbar, Alert } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+
+
 
 function SubmitClaim() {
 
@@ -39,6 +45,10 @@ function SubmitClaim() {
 
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [dragActive, setDragActive] = useState(false);
+  const navigate = useNavigate();
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -73,7 +83,7 @@ function SubmitClaim() {
       size: file.size,
       file: file,
     }));
-    setUploadedFiles(prev => [...prev, ...newFiles]);
+    setUploadedFiles([newFiles[0]]);// only one file upload por favor
   };
 
   const removeFile = (fileId) => {
@@ -87,11 +97,40 @@ function SubmitClaim() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Form submitted:', { formData, uploadedFiles });
-    // You'll connect Firebase Storage & Firestore here later.
-  };
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+    const user = auth.currentUser;
+    if (!user) return alert("You must be logged in.");
+    if (uploadedFiles.length === 0) return alert("Please upload a file.");
+
+    const file = uploadedFiles[0];
+    const storageRef = ref(storage, `claims/${user.uid}/${Date.now()}_${file.name}`);
+    const snapshot = await uploadBytes(storageRef, file.file);
+    const downloadUrl = await getDownloadURL(snapshot.ref);
+
+    const claimId = `CS-${Date.now().toString().slice(-6)}-${new Date().getFullYear()}`;
+    await addDoc(collection(db, 'claims'), {
+      userId: user.uid,
+      claimId,
+      fullName: formData.fullName,
+      email: formData.email,
+      phone: formData.phone,
+      address: formData.address,
+      fileUrl: downloadUrl,
+      createdAt: Timestamp.now(),
+      status: 'In Review',
+    });
+
+    setSnackbarMessage('Claim submitted successfully!');
+    setSnackbarOpen(true);
+    setTimeout(() => navigate('/claimant-dashboard'), 2000);
+  } catch (err) {
+    console.error(err);
+    alert("Error submitting claim.");
+  }
+};
 
   return (
     <Box minHeight="100vh" bgcolor="#f9fafb">
@@ -166,7 +205,7 @@ function SubmitClaim() {
             </Typography>
             <Button variant="contained" component="label" sx={{ mt: 2 }}>
               Choose Files
-              <input hidden type="file" multiple onChange={(e) => handleFiles(e.target.files)} accept=".pdf,.jpg,.jpeg,.png" />
+              <input hidden type="file" onChange={(e) => handleFiles(e.target.files)} accept=".pdf,.jpg,.jpeg,.png" />
             </Button>
             <Typography variant="caption" display="block" mt={1} color="text.secondary">
               Supported: PDF, JPG, PNG (Max 10MB)
@@ -196,11 +235,23 @@ function SubmitClaim() {
 
         {/* Buttons */}
         <Box display="flex" justifyContent="flex-end" gap={2}>
-          <Button variant="outlined" color="inherit" startIcon={<Person />}>Cancel</Button>
+          <Button variant="outlined" color="inherit" startIcon={<Person />} onClick={() => navigate('/claimant-dashboard')}>
+            Cancel
+          </Button>
           <Button variant="contained" onClick={handleSubmit} endIcon={<Person />}>Continue</Button>
         </Box>
       </Container>
-    </Box>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="success" sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+    </Box>    
   );
 }
 
