@@ -25,8 +25,9 @@ import { useNavigate } from 'react-router-dom';
 
 function ClaimantDashboard() {
   const [claims, setClaims] = useState([]);
-  const [stats, setStats] = useState([]);// this one too !
+  const [stats, setStats] = useState([]);
   const [userName, setUserName] = useState('');
+
 
 
 useEffect(() => {
@@ -197,10 +198,23 @@ useEffect(() => {
                   </TableRow>
                 ) : (
                   claims.map((claim, index) => (
-                    <TableRow key={index} hover>
-                      <TableCell>{claim.id}</TableCell>
-                      <TableCell>{claim.type}</TableCell>
-                      <TableCell>{claim.dateField}</TableCell>
+                    <TableRow
+                    key={index}
+                    hover
+                    sx={{
+                      cursor: 'pointer',
+                      '&:hover': {
+                        backgroundColor: '#f0f0f0',
+                      },
+                    }}
+                    onClick={() => navigate(`/claim/${claim.id}`)} 
+                    >
+                      <TableCell>{claim.claimId}</TableCell>
+                      <TableCell>Outpatient Visit</TableCell>
+                      <TableCell>
+                        {claim.createdAt?.toDate().toLocaleDateString() || 'N/A'}
+                      </TableCell>
+
                       <TableCell>
                         <Chip
                           label={claim.status}
@@ -213,7 +227,9 @@ useEffect(() => {
                           size="small"
                         />
                       </TableCell>
-                      <TableCell>{claim.amount}</TableCell>
+                      <TableCell>
+                        {claim.ocrData?.['Claimed Amount'] ? `Ksh ${claim.ocrData['Claimed Amount']}` : 'N/A'}
+                      </TableCell>
                     </TableRow>
                   ))
                 )}
