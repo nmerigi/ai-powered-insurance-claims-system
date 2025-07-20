@@ -24,7 +24,7 @@ import { useNavigate } from 'react-router-dom';
 
 
 function ClaimantDashboard() {
-  const claims = []; // fetch this from Firestore later
+  const [claims, setClaims] = useState([]);
   const [stats, setStats] = useState([]);// this one too !
   const [userName, setUserName] = useState('');
 
@@ -45,7 +45,12 @@ useEffect(() => {
 
        // Fetch claims
       const querySnapshot = await getDocs(collection(db, 'claims'));
-      const claimsData = querySnapshot.docs.map(doc => doc.data());
+      const claimsData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })).filter(claim => claim.userId === user.uid); 
+      setClaims(claimsData); // this feeds the table at the bottom
+
 
       const total = claimsData.length;
       const inProgress = claimsData.filter(c => c.status === 'In Review').length;
