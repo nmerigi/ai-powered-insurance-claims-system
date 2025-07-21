@@ -15,7 +15,7 @@ function App() {
         <Route path="/claimant-dashboard" element={<ClaimantDashboard />} />
         <Route path="/insurer-dashboard" element={<InsurerDashboard />} />
         <Route path="/submit-claim" element={<SubmitClaim/>} />
-        <Route path="/claim-details" element={<ClaimDetails />}/>
+        <Route path="/claim-details/:id" element={<ClaimDetails />} />
       </Routes>
     </BrowserRouter>
   );

@@ -207,7 +207,7 @@ useEffect(() => {
                         backgroundColor: '#f0f0f0',
                       },
                     }}
-                    onClick={() => navigate(`/claim/${claim.id}`)} 
+                    onClick={() => navigate(`/claim-details/${claim.id}`)} 
                     >
                       <TableCell>{claim.claimId}</TableCell>
                       <TableCell>Outpatient Visit</TableCell>
