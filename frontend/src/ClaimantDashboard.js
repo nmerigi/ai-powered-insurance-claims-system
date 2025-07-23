@@ -28,67 +28,80 @@ function ClaimantDashboard() {
   const [stats, setStats] = useState([]);
   const [userName, setUserName] = useState('');
 
-
-
-useEffect(() => {
-  const  fetchDashboardData = async () => {
-    try {
-
-      const user = auth.currentUser;
-      if (!user) return;
-
-      // Fetch user info
-      const userRef = doc(db, 'users', user.uid);
-      const userSnap = await getDoc(userRef);
-      if (userSnap.exists()) {
-        setUserName((userSnap.data().fullName || '').split(' ')[0]);
-      }
-
-       // Fetch claims
-      const querySnapshot = await getDocs(collection(db, 'claims'));
-      const claimsData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      })).filter(claim => claim.userId === user.uid); 
-      setClaims(claimsData); // this feeds the table at the bottom
-
-
-      const total = claimsData.length;
-      const inProgress = claimsData.filter(c => c.status === 'In Review').length;
-      const approved = claimsData.filter(c => c.status === 'Approved').length;
-      const rejected = claimsData.filter(c => c.status === 'Rejected').length;
-
-      setStats([
-        {
-          title: 'Total Claims Submitted',
-          value: total,
-          description: 'Overall claims processed since joining.',
-          icon: <FileCopy color="primary" fontSize="small" />,
-        },
-        {
-          title: 'Claims In Progress',
-          value: inProgress,
-          description: 'Currently under review or awaiting documents.',
-          icon: <HourglassEmpty sx={{ color: 'orange' }} fontSize="small" />,
-        },
-        {
-          title: 'Approved Claims',
-          value: approved,
-          description: 'Claims successfully approved and processed.',
-          icon: <CheckCircle sx={{ color: 'green' }} fontSize="small" />,
-        },
-        {
-          title: 'Rejected Claims',
-          value: rejected,
-          description: 'Claims that could not be approved.',
-          icon: <Cancel sx={{ color: 'red' }} fontSize="small" />,
-        },
-      ]);
-    } catch (error) {
-      console.error('Error fetching claim stats:', error);
+  // Helper function to get customer-facing status
+  const getCustomerStatus = (actualStatus) => {
+    // If status is "Flagged", show "In Review" to customer
+    if (actualStatus === 'Flagged') {
+      return 'In Review';
     }
+    return actualStatus;
   };
-  fetchDashboardData();
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        // Fetch user info
+        const userRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          setUserName((userSnap.data().fullName || '').split(' ')[0]);
+        }
+
+        // Fetch claims
+        const querySnapshot = await getDocs(collection(db, 'claims'));
+        const claimsData = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        })).filter(claim => claim.userId === user.uid); 
+        
+        // Transform claims to show customer-facing status
+        const transformedClaims = claimsData.map(claim => ({
+          ...claim,
+          displayStatus: getCustomerStatus(claim.status)
+        }));
+        
+        setClaims(transformedClaims);
+
+        const total = claimsData.length;
+        // For stats, treat both "In Review" and "Flagged" as "In Progress"
+        const inProgress = claimsData.filter(c => c.status === 'In Review' || c.status === 'Flagged').length;
+        const approved = claimsData.filter(c => c.status === 'Approved').length;
+        const rejected = claimsData.filter(c => c.status === 'Rejected').length;
+
+        setStats([
+          {
+            title: 'Total Claims Submitted',
+            value: total,
+            description: 'Overall claims processed since joining.',
+            icon: <FileCopy color="primary" fontSize="small" />,
+          },
+          {
+            title: 'Claims In Progress',
+            value: inProgress,
+            description: 'Currently under review or awaiting documents.',
+            icon: <HourglassEmpty sx={{ color: 'orange' }} fontSize="small" />,
+          },
+          {
+            title: 'Approved Claims',
+            value: approved,
+            description: 'Claims successfully approved and processed.',
+            icon: <CheckCircle sx={{ color: 'green' }} fontSize="small" />,
+          },
+          {
+            title: 'Rejected Claims',
+            value: rejected,
+            description: 'Claims that could not be approved.',
+            icon: <Cancel sx={{ color: 'red' }} fontSize="small" />,
+          },
+        ]);
+      } catch (error) {
+        console.error('Error fetching claim stats:', error);
+      }
+    };
+    fetchDashboardData();
   }, []);
 
   const navigate = useNavigate();
@@ -217,10 +230,10 @@ useEffect(() => {
 
                       <TableCell>
                         <Chip
-                          label={claim.status}
+                          label={claim.displayStatus}
                           color={
-                            claim.status === 'Approved' ? 'success' :
-                            claim.status === 'Rejected' ? 'error' :
+                            claim.displayStatus === 'Approved' ? 'success' :
+                            claim.displayStatus === 'Rejected' ? 'error' :
                             'info'
                           }
                           variant="outlined"
@@ -243,4 +256,3 @@ useEffect(() => {
 }
 
 export default ClaimantDashboard;
-
