@@ -30,11 +30,22 @@ import {
 
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebase';
+import html2pdf from 'html2pdf.js';
+import jsPDF from 'jspdf';
 
 const ClaimDetails = () => {
   const { id } = useParams();
   const [claim, setClaim] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Helper function to get customer-facing status (same as dashboard)
+  const getCustomerStatus = (actualStatus) => {
+    // If status is "Flagged", show "In Review" to customer
+    if (actualStatus === 'Flagged') {
+      return 'In Review';
+    }
+    return actualStatus;
+  };
 
   useEffect(() => {
     const fetchClaim = async () => {
@@ -89,6 +100,12 @@ const ClaimDetails = () => {
     idNumber = 'ID123456789'
   } = claim;
 
+  // Get customer-facing status
+  const displayStatus = getCustomerStatus(status);
+  
+  // Only show AI review results if status is not "Flagged"
+  const shouldShowAIReview = status !== 'Flagged' && reviewResult.label;
+
   const actualIncidentDate = ocrData['Date of Treatment'] || 'N/A';
   const diagnosis = ocrData.Diagnosis || 'N/A';
   const treatmentDetails = ocrData['Treatment Details'] || 'N/A';
@@ -128,6 +145,29 @@ const ClaimDetails = () => {
     mb: 2,
     fontWeight: 600,
     color: 'text.primary'
+  };
+
+  const handleDownloadReport = () => {
+    const doc = new jsPDF();
+    
+    // Title
+    doc.setFontSize(20);
+    doc.text('CLAIM REPORT', 20, 20);
+    
+    let y = 40;
+    
+    // Add data
+    doc.setFontSize(12);
+    doc.text(`Claim ID: ${claimId || 'N/A'}`, 20, y); y += 10;
+    doc.text(`Claimant: ${fullName || 'N/A'}`, 20, y); y += 10;
+    doc.text(`Status: ${displayStatus || 'N/A'}`, 20, y); y += 10;
+    doc.text(`Hospital: ${hospitalName || 'N/A'}`, 20, y); y += 10;
+    doc.text(`Doctor: ${doctorName || 'N/A'}`, 20, y); y += 10;
+    doc.text(`Diagnosis: ${diagnosis || 'N/A'}`, 20, y); y += 10;
+    doc.text(`Treatment: ${treatmentDetails || 'N/A'}`, 20, y); y += 10;
+    
+    // Save
+    doc.save(`${claimId}-report.pdf`);
   };
 
   return (
@@ -181,21 +221,21 @@ const ClaimDetails = () => {
                         Status
                       </Typography>
                       <Chip
-                        label={status}
-                        color={status === 'Rejected' ? 'error' : (status === 'In Review' ? 'info' : 'success')}
+                        label={displayStatus}
+                        color={displayStatus === 'Rejected' ? 'error' : (displayStatus === 'In Review' ? 'info' : 'success')}
                         size="small"
                         sx={{
                           borderRadius: '4px',
                           fontWeight: 600,
-                          ...(status === 'Rejected' && {
+                          ...(displayStatus === 'Rejected' && {
                             backgroundColor: '#ffebee',
                             color: '#d32f2f',
                           }),
-                          ...(status === 'In Review' && {
+                          ...(displayStatus === 'In Review' && {
                             backgroundColor: '#e3f2fd',
                             color: '#1976d2',
                           }),
-                          ...(status === 'Approved' && {
+                          ...(displayStatus === 'Approved' && {
                             backgroundColor: '#e8f5e9',
                             color: '#2e7d32',
                           }),
@@ -214,12 +254,12 @@ const ClaimDetails = () => {
                   <AssignmentOutlinedIcon /> Submitted Details
                 </Typography>
                 <Divider sx={{ mb: 2 }} />
-{/* Personal Information */}
+                {/* Personal Information */}
                 <Typography variant="subtitle1" fontWeight={600} mb={1} sx={{ color: 'text.primary' }}>
                   Personal Information
                 </Typography>
                 {/* First Row of Personal Information */}
-                <Grid container spacing={12} mb={4}> {/* Adjusted spacing to 3 and added mb */}
+                <Grid container spacing={12} mb={4}>
                   <Grid item xs={12} sm={6} md={4}>
                     <Typography variant="body2" color="text.secondary" fontWeight={500}>Full Name</Typography>
                     <Typography variant="body1" color="text.primary">{fullName}</Typography>
@@ -235,7 +275,7 @@ const ClaimDetails = () => {
                 </Grid>
 
                 {/* Second Row of Personal Information */}
-                <Grid container spacing={12} mb={4}> {/* Added mb to separate rows */}
+                <Grid container spacing={12} mb={4}>
                   <Grid item xs={12} sm={6} md={4}>
                     <Typography variant="body2" color="text.secondary" fontWeight={500}>Email Address</Typography>
                     <Typography variant="body1" color="text.primary">{email}</Typography>
@@ -245,17 +285,16 @@ const ClaimDetails = () => {
                     <Typography variant="body1" color="text.primary">{policyNumber}</Typography>
                   </Grid>
                   {/* Display Patient Name if different from Claimant's Full Name */}
-                  {patientName && patientName !== fullName && ( // Ensure patientName doesn't duplicate fullName
+                  {patientName && patientName !== fullName && (
                     <Grid item xs={12} sm={6} md={4}>
                       <Typography variant="body2" color="text.secondary" fontWeight={500}>Patient Name</Typography>
                       <Typography variant="body1" color="text.primary">{patientName}</Typography>
                     </Grid>
                   )}
-                  
                 </Grid>
 
                 {/* Third Row of Personal Information */}
-                <Grid container spacing={12} mb={3}> {/* mb to separate this section from the next */}
+                <Grid container spacing={12} mb={3}>
                   <Grid item xs={12} sm={6} md={4}>
                     <Typography variant="body2" color="text.secondary" fontWeight={500}>Hospital Name</Typography>
                     <Typography variant="body1" color="text.primary">{hospitalName}</Typography>
@@ -269,7 +308,6 @@ const ClaimDetails = () => {
                     <Typography variant="body1" color="text.primary">{claimedAmount}</Typography>
                   </Grid>
                 </Grid>
-
 
                 {/* Incident Details */}
                 <Typography variant="subtitle1" fontWeight={600} mb={1} sx={{ color: 'text.primary' }}>
@@ -335,12 +373,11 @@ const ClaimDetails = () => {
                     </Grid>
                   </Grid>
                 </Card>
-
               </CardContent>
             </Card>
 
-            {/* AI Review Card */}
-            {reviewResult.label && (
+            {/* AI Review Card - Only show if not flagged */}
+            {shouldShowAIReview && (
               <Card sx={cardStyle}>
                 <CardContent>
                   <Typography variant="h6" sx={sectionTitleStyle}>
@@ -349,7 +386,7 @@ const ClaimDetails = () => {
                   <Divider sx={{ mb: 2 }} />
                   <Typography variant="body2" color="text.secondary" fontWeight={500}>Outcome</Typography>
                   <Typography variant="body1" color="text.primary" mb={1}>{reviewResult.label}</Typography>
-                  <Typography variant="body2" color="text.secondary" fontWeight={500}>Explaination</Typography>
+                  <Typography variant="body2" color="text.secondary" fontWeight={500}>Explanation</Typography>
                   <Box>
                     {reviewResult.explanation?.map((reason, index) => (
                       <Chip
@@ -358,7 +395,7 @@ const ClaimDetails = () => {
                         color="warning"
                         variant="outlined"
                         size="large"
-                        sx={{ mr: 1, mb: 1,marginTop:1, borderRadius: '4px', fontWeight: 500,fontSize: '0.9rem' }}
+                        sx={{ mr: 1, mb: 1, marginTop: 1, borderRadius: '4px', fontWeight: 500, fontSize: '0.9rem' }}
                       />
                     ))}
                   </Box>
@@ -368,7 +405,7 @@ const ClaimDetails = () => {
           </Grid>
 
           {/* Right Column: Need Help? */}
-          <Grid item xs={12} md={4} lg={3} >
+          <Grid item xs={12} md={4} lg={3}>
             <Card sx={{ ...cardStyle, p: 2, bgcolor: 'background.paper' }}>
               <CardContent>
                 <Typography variant="h6" sx={{ ...sectionTitleStyle, mb: 2 }}>
@@ -411,6 +448,19 @@ const ClaimDetails = () => {
                     </Typography>
                   </Box>
                 </Box>
+              </CardContent>
+            </Card>
+
+            {/* Generate Report Button */}
+            <Card sx={{ ...cardStyle, p: 2, bgcolor: 'background.paper' }}>
+              <CardContent>
+                <Typography variant="h6" sx={{ ...sectionTitleStyle, mb: 2 }}>
+                  <DescriptionOutlinedIcon /> Download Report
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+                <Button variant="contained" color="primary" fullWidth onClick={handleDownloadReport}>
+                  Generate PDF
+                </Button>
               </CardContent>
             </Card>
           </Grid>
