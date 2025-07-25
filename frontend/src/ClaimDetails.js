@@ -568,7 +568,7 @@ const ClaimDetails = () => {
                       p: 3, 
                       mb: 4,
                       borderRadius: '12px',
-                      background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #bfdbfe 100%)',
+                      background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #bfdbfe 100%)', 
                       border: '1px solid rgba(245, 158, 11, 0.1)'
                     }}>
                       <Typography variant="subtitle1" fontWeight={700} mb={3} sx={{ color: 'primary.main' }}>

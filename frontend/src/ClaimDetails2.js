@@ -671,7 +671,15 @@ const ClaimDetails2 = () => {
 
       {/* Main Content */}
       <Box sx={{ flexGrow: 1, overflowY: 'auto', pb: 8 }}>
-        <Container maxWidth="xl" sx={{ py: 6 }}>
+        <Container 
+          maxWidth={false} 
+          sx={{ 
+            py: 6, 
+            px: 8,
+            maxWidth: '1700px',  // Add this
+            mx: 'auto'           // Add this to center
+          }}
+        >
           {/* Page Title Section */}
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={6}>
             <Box>
@@ -755,9 +763,9 @@ const ClaimDetails2 = () => {
                   {/* Personal Information Section */}
                   <Box sx={{ 
                     p: 4, 
-                    mb: 5,
+                    mb: 3,
                     borderRadius: '16px',
-                    background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%)',
+                    background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #bfdbfe 100%)',
                     border: '2px solid rgba(37, 99, 235, 0.1)',
                     boxShadow: '0 4px 12px rgba(37, 99, 235, 0.05)'
                   }}>
@@ -796,9 +804,9 @@ const ClaimDetails2 = () => {
 
                   <Box sx={{ 
                     p: 4, 
-                    mb: 5,
+                    mb: 3,
                     borderRadius: '16px',
-                    background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%)',
+                    background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #bfdbfe 100%)',
                     border: '2px solid rgba(37, 99, 235, 0.1)',
                     boxShadow: '0 4px 12px rgba(37, 99, 235, 0.05)'
                   }}>
@@ -824,9 +832,9 @@ const ClaimDetails2 = () => {
                   {/* Incident Details Section */}
                   <Box sx={{ 
                     p: 4, 
-                    mb: 4,
+                    mb: 3,
                     borderRadius: '16px',
-                    background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%)',
+                    background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #bfdbfe 100%)',
                     border: '2px solid rgba(37, 99, 235, 0.1)',
                     boxShadow: '0 4px 12px rgba(37, 99, 235, 0.05)'
                   }}>
@@ -842,7 +850,7 @@ const ClaimDetails2 = () => {
                   </Box>
 
                   {/* Diagnosis & Treatment */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 4 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
                     <DescriptionOutlinedIcon fontSize="medium" sx={{ color: 'primary.main' }} />
                     <Typography variant="h6" fontWeight={800} sx={{ color: 'primary.main' }}>
                       Diagnosis & Treatment
@@ -850,9 +858,9 @@ const ClaimDetails2 = () => {
                   </Box>
                   <Box sx={{ 
                     p: 4, 
-                    mb: 5,
+                    mb: 4,
                     borderRadius: '16px',
-                    background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%)',
+                    background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #bfdbfe 100%)',
                     border: '2px solid rgba(37, 99, 235, 0.1)',
                     boxShadow: '0 4px 12px rgba(37, 99, 235, 0.05)'
                   }}>
@@ -865,7 +873,7 @@ const ClaimDetails2 = () => {
                   </Box>
 
                   {/* Uploaded Documents */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 4 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
                     <InsertDriveFileOutlinedIcon fontSize="medium" sx={{ color: 'primary.main' }} />
                     <Typography variant="h6" fontWeight={800} sx={{ color: 'primary.main' }}>
                       Uploaded Documents
@@ -873,9 +881,9 @@ const ClaimDetails2 = () => {
                   </Box>
                   <Box sx={{ 
                     p: 4,
-                    mb: 5,
+                    mb: 4,
                     borderRadius: '16px',
-                    background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                    background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #bfdbfe 100%)',
                     border: '2px solid #e2e8f0',
                     boxShadow: '0 4px 12px rgba(148, 163, 184, 0.1)'
                   }}>
@@ -942,9 +950,9 @@ const ClaimDetails2 = () => {
                     <Typography variant="h6" sx={sectionTitleStyle}>
                       <AssignmentOutlinedIcon /> AI Review
                     </Typography>
-                    <Divider sx={{ mb: 5, background: 'linear-gradient(90deg, #2563eb, transparent)' }} />
+                    <Divider sx={{ mb: 4, background: 'linear-gradient(90deg, #2563eb, transparent)' }} />
                     <Box sx={{ 
-                      p: 4,
+                      p: 3,
                       borderRadius: '16px',
                       background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)',
                       border: '2px solid rgba(245, 158, 11, 0.2)',
