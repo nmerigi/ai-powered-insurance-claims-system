@@ -310,7 +310,7 @@ function AuthForm() {
             left={24}
             sx={{ opacity: 0.7 }}
           >
-            © 2024 SmartClaims Insurance. All rights reserved.
+            © 2025 SmartClaims Insurance. All rights reserved.
           </Typography>
         </Box>
 
