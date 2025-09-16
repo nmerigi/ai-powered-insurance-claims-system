@@ -4,12 +4,12 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyB6ezeVGVH6SR-eDVqjOKUh_AdEi9EU0g4",
-  authDomain: "smartclaims-dcc6e.firebaseapp.com",
-  projectId: "smartclaims-dcc6e",
-  storageBucket: "smartclaims-dcc6e.firebasestorage.app",
-  messagingSenderId: "106308550605",
-  appId: "1:106308550605:web:51c30dcecb6bbb487b4e84"
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID
 };
 
 // Initialize Firebase
